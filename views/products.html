@@ -1,0 +1,20 @@
+{% extends './layout.html' %}
+{% block content %}
+<h1>Products</h1>
+<form action='/products' method='POST'>
+  <input name='name' placeholder='name' />
+  <br />
+  <button>Insert Product</button>
+</form>
+<ul>
+  {% for product in products %}
+    <li>
+      {{ product.name }}
+      <form method='POST' action='/products/{{product.id}}?_method=DELETE'>
+        <button>Delete</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
