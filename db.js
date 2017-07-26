@@ -38,7 +38,7 @@ function createProduct(product, cb){
 }
 
 function deleteProduct(id, cb){
-  client.query('delete from products where id = $1', [ id ], function(err, result){
+  client.query('DELETE FROM products WHERE id = $1', [ id ], function(err, result){
     if(err){
       return cb(err);
     }
