@@ -8,7 +8,7 @@ client.connect(function(err){
   }
 });
 
-function sync(cb){
+function sync(){
   var sql = `
     DROP TABLE IF EXISTS products;
     CREATE TABLE products(
@@ -16,63 +16,47 @@ function sync(cb){
       name CHARACTER VARYING(255) UNIQUE
     );
   `;
-  query(sql, null, function(err){
-    if(err){
-      return cb(err);
-    }
-    cb(null);
-  });
+  return query(sql);
 }
 
-function query(sql, params, cb){
-  client.query(sql, params, cb);
-}
-
-function createProduct(product, cb){
-  query('insert into products (name) values ($1) returning id', [ product.name ], function(err, result){
-    if(err){
-      return cb(err);
-    }
-    cb(null, result.rows[0].id); 
-  }); 
-}
-
-function deleteProduct(id, cb){
-  client.query('DELETE FROM products WHERE id = $1', [ id ], function(err, result){
-    if(err){
-      return cb(err);
-    }
-    cb(null); 
-  }); 
-}
-
-function getProducts(cb){
-  query('select * from products', null, function(err, result){
-    if(err){
-      return cb(err);
-    }
-    cb(null, result.rows);
-  });
-}
-
-function seed(cb){
-  createProduct({ name: 'foo'}, function(err, id){
-    if(err){
-      return cb(err);
-    }
-    createProduct({ name: 'bar'}, function(err, id){
+function query(sql, params){
+  return new Promise(function(resolve, reject){
+    client.query(sql, params, function(err, result){
       if(err){
-        return cb(err);
+        return reject(err);
       }
-      createProduct({ name: 'bazz'}, function(err, id){
-        if(err){
-          return cb(err);
-        }
-        cb(null);
-      });
+      resolve(result);
     });
   });
+}
 
+function createProduct(product){
+  return query('insert into products (name) values ($1) returning id', [ product.name ])
+    .then(function(result){
+      return result.rows[0].id;
+    });
+}
+
+function deleteProduct(id){
+  return query('DELETE FROM products WHERE id = $1', [ id ]);
+}
+
+function getProducts(){
+  return query('select * from products', null)
+    .then(function(result){
+      return result.rows;
+    });
+}
+
+function seed(){
+  return Promise.all([
+    createProduct({ name: 'foo'}),
+    createProduct({ name: 'bar'}),
+    createProduct({ name: 'bazz'}),
+  ])
+  .then(function(result){
+    console.log(result);
+  });
 }
 
 module.exports = {
